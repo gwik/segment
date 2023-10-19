@@ -93,6 +93,7 @@ impl AutoBatcher {
     ///
     /// batcher.push(msg); // .await
     /// ```
+    #[tracing::instrument(skip_all)]
     pub async fn push(&mut self, msg: impl Into<BatchMessage>) -> Result<()> {
         if let Some(msg) = self.batcher.push(msg)? {
             self.flush().await?;
@@ -127,6 +128,7 @@ impl AutoBatcher {
     /// batcher.push(msg); // .await
     /// batcher.flush(); // .await
     /// ```
+    #[tracing::instrument(skip_all)]
     pub async fn flush(&mut self) -> Result<()> {
         if self.batcher.is_empty() {
             return Ok(());

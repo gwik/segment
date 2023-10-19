@@ -42,6 +42,7 @@ impl HttpClient {
 
 #[async_trait::async_trait]
 impl Client for HttpClient {
+    #[tracing::instrument(skip_all, fields(http.url = tracing::field::Empty, http.status_code = tracing::field::Empty))]
     async fn send(&self, write_key: String, msg: Message) -> Result<()> {
         let path = match msg {
             Message::Identify(_) => "/v1/identify",
@@ -53,15 +54,30 @@ impl Client for HttpClient {
             Message::Batch(_) => "/v1/batch",
         };
 
-        let _ = self
+        let url = format!("{}{}", self.host, path);
+        let span = tracing::Span::current();
+        span.record("http.url", url.as_str());
+
+        let response = self
             .client
-            .post(&format!("{}{}", self.host, path))
+            .post(&url)
             .basic_auth(write_key, Some(""))
             .json(&msg)
             .send()
-            .await?
-            .error_for_status()?;
+            .await;
 
-        Ok(())
+        if let Ok(response) = &response {
+            span.record("http.status_code", response.status().as_u16());
+        }
+
+        if let Err(err) = response.and_then(|rsp| rsp.error_for_status()) {
+            tracing::error!(
+                err = &err as &(dyn std::error::Error + 'static),
+                "segment http request failed"
+            );
+            Err(err.into())
+        } else {
+            Ok(())
+        }
     }
 }
