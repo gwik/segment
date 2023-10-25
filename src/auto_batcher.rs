@@ -69,6 +69,18 @@ impl AutoBatcher {
         }
     }
 
+    /// Returns the length of the buffer, the number of messages in the batch buffer.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.batcher.len()
+    }
+
+    /// Returns whether the batch is empty.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.batcher.is_empty()
+    }
+
     /// Push a message into the batcher.
     /// If the batcher is full, send it and create a new batcher with the message.
     ///

@@ -122,6 +122,12 @@ impl Batcher {
         std::mem::take(&mut self.buf)
     }
 
+    /// Returns the length of the buffer as the number of messages in the batch buffer.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.buf.len()
+    }
+
     /// Consumes this batcher and converts it into a message that can be sent to
     /// Segment.
     pub fn into_message(self) -> Message {
